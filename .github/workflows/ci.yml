@@ -1,0 +1,24 @@
+name: CI Test
+
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    [cite_start]runs-on: ubuntu-latest
+    
+    steps:
+      
+      - name: Checkout du dépôt
+        [cite_start]uses: actions/checkout@v3 [cite: 49]
+
+      
+      - name: Test simple
+        [cite_start]run: echo "CI Pipeline exécuté avec succès !" [cite: 51]
+      
+      # Vérifier que PHP est bien disponible (puisque c'est un projet PHP)
+      - name: Vérification version PHP
+        run: php -v
