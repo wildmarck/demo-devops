@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Ton site Web
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    environment:
+      # Ici, on force l'utilisation de la base locale
+      - DB_HOST=db
+      - DB_NAME=meteo_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+
+  # La base de données locale (Fausse InfinityFree)
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_DATABASE=meteo_db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      # C'est la magie : on injecte ton fichier SQL au démarrage !
+      # Assure-toi que le nom du fichier correspond bien au tien
+      - ./if0_40080173_devops.sql:/docker-entrypoint-initdb.d/init.sql
