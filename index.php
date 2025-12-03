@@ -97,7 +97,7 @@ $username = htmlspecialchars($_SESSION['username']);
     <div class="pt-24 pb-10 px-4 container mx-auto max-w-4xl">
         
         <div class="glass-panel p-8 mb-8 text-center">
-            <h2 class="text-3xl font-bold mb-6 drop-shadow-md">Quel temps fait-il aujourd'hui ?</h2>
+            <h2 class="text-3xl font-bold mb-6 drop-shadow-md">Quel temps fait-il aujourd'hui ??</h2>
             
             <form id="meteoForm" class="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
                 <div class="relative w-full">
