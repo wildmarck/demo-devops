@@ -1,4 +1,4 @@
-name: CI/CD Docker Pipeline
+name: CI/CD Complet (Docker + Terraform)
 
 on:
   push:
@@ -6,36 +6,55 @@ on:
       - main
 
 jobs:
+  # ÉTAPE 1 : FABRICATION (BUILD)
   build-and-push:
     runs-on: ubuntu-latest
-    
     steps:
-      # 1. Récupération du code
       - name: Checkout du code
         uses: actions/checkout@v3
 
-      # 2. Création du fichier config.php (Car il est dans ton .gitignore !)
-      # Sans ça, ton site dans Docker n'aura pas les infos de connexion BDD
-      - name: Création config.php temporaire
+      # On génère le config.php pour que l'image fonctionne
+      - name: Générer config.php
         run: |
           echo "<?php" > config.php
-          echo "\$host = '${{ secrets.DB_HOST }}';" >> config.php
-          echo "\$dbname = '${{ secrets.DB_NAME }}';" >> config.php
-          echo "\$username = '${{ secrets.DB_USER }}';" >> config.php
-          echo "\$password = '${{ secrets.DB_PASS }}';" >> config.php
+          echo "\$host = getenv('DB_HOST') ?: '${{ secrets.DB_HOST }}';" >> config.php
+          echo "\$dbname = getenv('DB_NAME') ?: '${{ secrets.DB_NAME }}';" >> config.php
+          echo "\$username = getenv('DB_USER') ?: '${{ secrets.DB_USER }}';" >> config.php
+          echo "\$password = getenv('DB_PASSWORD') ?: '${{ secrets.DB_PASSWORD }}';" >> config.php
           echo "try { \$pdo = new PDO(\"mysql:host=\$host;dbname=\$dbname;charset=utf8\", \$username, \$password); \$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); \$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC); } catch (PDOException \$e) { die(\"Erreur connexion : \" . \$e->getMessage()); }" >> config.php
 
-      # 3. Connexion à Docker Hub
-      - name: Connexion à Docker Hub
+      - name: Connexion Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 4. Construction et Envoi de l'image
-      - name: Build & Push Docker Image
+      - name: Build & Push
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/meteo-app:latest
+
+  # ÉTAPE 2 : INFRASTRUCTURE (TERRAFORM)
+  terraform-check:
+    runs-on: ubuntu-latest
+    needs: build-and-push # On attend que l'image soit prête
+    
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v3
+
+      - name: Installation de Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Vérification du format (Style de code)
+        run: terraform fmt -check
+
+      - name: Terraform Plan (Simulation)
+        # Ceci va simuler la création du conteneur sur le serveur GitHub
+        # C'est la preuve que ton code infrastructure fonctionne
+        run: terraform plan -no-color
