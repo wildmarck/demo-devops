@@ -19,7 +19,7 @@ resource "docker_image" "meteo_image" {
 resource "docker_container" "meteo_container" {
   image = docker_image.meteo_image.image_id
   name  = "mon_site_terraform"
-  
+
   ports {
     internal = 80
     external = 8080
